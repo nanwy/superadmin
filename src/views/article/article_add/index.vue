@@ -44,6 +44,7 @@
 // 引入api
 import { addarticle } from "@/api/article";
 import { qiniutoken } from "@/api/qiniu";
+import { imgPreview, compress, dataURLtoFile } from "@/utils/zip";
 // 引入七牛云
 import * as qiniu from "qiniu-js";
 // 引入封装好的tinymce
@@ -60,7 +61,7 @@ export default {
         type: "",
         content: "",
         date: "",
-        img: null
+        img: 555
       },
       rules: {
         title: [{ required: true, message: "请填写标题！" }],
@@ -68,6 +69,9 @@ export default {
         date: [{ required: true, message: "请填写日期时间！" }]
       }
     };
+  },
+  created() {
+    console.log(dataURLtoFile, imgPreview, "发布");
   },
   mouted() {},
   methods: {
@@ -87,122 +91,138 @@ export default {
         type: "error"
       });
     },
+
     onSubmit() {
       // 验证表单数据
-      this.form.content = this.$refs["con"].content.replace(/\'/g,'"');
+      this.form.content = this.$refs["con"].content.replace(/\'/g, '"');
       // console.log(this.$refs.con.content);
       console.log(this.$store.state.user.role);
-      this.$refs["form"].validate(valid => {
-        if (valid) {
-          console.log("表单验证通过！");
-          if (this.$store.state.user.role != "admin") {
-            this.$message({
-              message: "您没权限发送哦~",
-              type: "warning"
-            });
-          } else {
-            if (this.form.img == null) {
-              console.log("没有封面图");
-              // this.form.filedata = "无";
-              console.log(this.form);
-              addarticle(this.form)
-                .then(res => {
-                  console.log(res.errno);
-                  this.$message({
-                    message: res.errno,
-                    type: "success"
-                  });
-                })
-                .catch(error => {
-                  console.log("发布文章错误");
-                  console.log(error);
-                });
+      console.log(imgPreview);
+
+      imgPreview(this.form.img).then(res => {
+        console.log("res as,nflasjflaskkjflasfj奥数班看见爱上", res);
+
+        this.form.img = res;
+        this.$refs["form"].validate(valid => {
+          if (valid) {
+            console.log("表单验证通过！");
+            if (this.$store.state.user.role != "admin") {
+              this.$message({
+                message: "您没权限发送哦~",
+                type: "warning"
+              });
             } else {
-              console.log("有封面图");
-              // this.form.filedata = this.form.filedata;
-              // 获取七牛云上传凭证
-              qiniutoken()
-                .then(res => {
-                  console.log("获取七牛云上传凭证成功！");
-                  this.token = res.uploadToken;
-                })
-                .then(() => {
-                  var datetime = new Date();
-                  var key = datetime.getTime() + this.form.img.name;
-                  var uptoken = this.token;
-                  var putExtra = {
-                    fname: "",
-                    params: {},
-                    mimeType: ["image/png", "image/jpeg", "image/gif"]
-                  };
-                  var config = {
-                    useCdnDomain: true
-                  };
-                  var ooo = this; // 获取vm实例this
-                  var observable = qiniu.upload(
-                    this.form.img,
-                    key,
-                    uptoken,
-                    putExtra,
-                    config
-                  );
-                  var subscription = observable.subscribe({
-                    next(res) {
-                      // next: 接收上传进度信息
-                      var percent = res.total.percent; // 当前上传进度
-                      ooo.jindu = percent.toFixed();
-                      ooo.jindu = Number(ooo.jindu);
-                    },
-                    error(err) {
-                      // 上传错误后触发
-                      console.log("上传错误");
-                      console.log(err);
-                      //  上传错误！发表文章
-                      console.log("上传错误！发表文章");
-                      addarticle(ooo.form)
-                        .then(res => {
-                          ooo.$message({
-                            message: res,
-                            type: "success"
-                          });
-                        })
-                        .catch(error => {
-                          console.log("发布文章错误");
-                          console.log(error);
-                        });
-                    },
-                    complete(ress) {
-                      // 接收上传完成后的后端返回信息
-                      console.log("上传封面图成功！");
-                      ooo.form.img =
-                        "https://img.cdn.zhengbeining.com/" + ress.key;
-                      // 发表文章
-                      console.log(ooo.form);
-                      addarticle(ooo.form)
-                        .then(res => {
-                          console.log("发布文章成功！");
-                          ooo.$message({
-                            message: res,
-                            type: "success"
-                          });
-                        })
-                        .catch(error => {
-                          console.log("发布文章失败！");
-                          console.log(error);
-                        });
-                    }
+              if (this.form.img == null) {
+                console.log("没有封面图");
+                // this.form.filedata = "无";
+                console.log(this.form);
+                addarticle(this.form)
+                  .then(res => {
+                    console.log(res.errno);
+                    console.log(res);
+
+                    this.$message({
+                      message: res.message,
+                      type: "success"
+                    });
+                  })
+                  .catch(error => {
+                    console.log("发布文章错误");
+                    console.log(error);
                   });
-                })
-                .catch(err => {
-                  console.log("获取七牛云上传凭证失败！");
-                  console.log(err);
-                });
+              } else {
+                console.log("有封面图");
+                // this.form.filedata = this.form.filedata;
+                // 获取七牛云上传凭证
+                qiniutoken()
+                  .then(res => {
+                    console.log("获取七牛云上传凭证成功！");
+                    this.token = res;
+                  })
+                  .then(() => {
+                    var datetime = new Date();
+                    var key = datetime.getTime() + this.form.img.name;
+                    console.log(this.form);
+
+                    var uptoken = this.token;
+                    var putExtra = {
+                      fname: "",
+                      params: {},
+                      mimeType: ["image/png", "image/jpeg", "image/gif"]
+                    };
+                    var config = {
+                      useCdnDomain: true
+                    };
+                    var ooo = this; // 获取vm实例this
+                    var observable = qiniu.upload(
+                      this.form.img,
+                      key,
+                      uptoken,
+                      putExtra,
+                      config
+                    );
+                    console.log(observable);
+
+                    var subscription = observable.subscribe({
+                      next(res) {
+                        // next: 接收上传进度信息
+                        console.log(res);
+
+                        var percent = res.total.percent; // 当前上传进度
+                        ooo.jindu = percent.toFixed();
+                        ooo.jindu = Number(ooo.jindu);
+                      },
+                      error(err) {
+                        // 上传错误后触发
+                        console.log(subscription);
+                        console.log("上传错误");
+                        console.log(err);
+                        //  上传错误！发表文章
+                        console.log("上传错误！发表文章");
+                        addarticle(ooo.form)
+                          .then(res => {
+                            ooo.$message({
+                              message: res,
+                              type: "success"
+                            });
+                          })
+                          .catch(error => {
+                            console.log("发布文章错误");
+                            console.log(error);
+                          });
+                      },
+                      complete(ress) {
+                        // 接收上传完成后的后端返回信息
+                        console.log("上传封面图成功！");
+                        ooo.form.img = "http://img.nanwayan.cn/" + ress.key;
+                        // 发表文章
+                        console.log(ooo.form);
+                        addarticle(ooo.form)
+                          .then(res => {
+                            console.log("发布文章成功！");
+                            ooo.$message({
+                              message: res,
+                              type: "success"
+                            });
+                          })
+                          .catch(error => {
+                            console.log("发布文章失败！");
+                            console.log(error);
+                          });
+                      }
+                    });
+                  })
+                  .catch(err => {
+                    console.log("获取七牛云上传凭证失败！");
+                    console.log(err);
+                  });
+              }
             }
+          } else {
+            alert("请填写完整！");
+            return false;
           }
-        } else {
-          alert("请填写完整！");
-          return false;
-        }
+        });
       });
     }
   }

@@ -55,7 +55,7 @@ export function editarticle(data) {
 }
 export function delarticle(id) {
   return request({
-    url: '/api/article/del',
+    url: '/api/blog/del',
     method: 'get',
     params: {
       id

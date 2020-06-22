@@ -66,11 +66,10 @@ export default {
       articlelist()
         .then(res => {
           console.log(res.data);
-          
+
           this.list = res.data;
           this.listLoading = false;
           console.log(this.list);
-          
         })
         .catch(err => {
           console.log(err);
@@ -115,7 +114,7 @@ export default {
       delarticle(id)
         .then(res => {
           this.$message({
-            message: res,
+            message: res.message,
             type: "success"
           });
           console.log("删除文章记录完成！");
@@ -133,7 +132,7 @@ export default {
       return new Promise(function(resolve, reject) {
         delqiniuimg(img)
           .then(res => {
-            if (res.code === 20000) {
+            if (res.message === "删除成功") {
               console.log("删除七牛云图片成功！");
               resolve(res.data);
             } else {
@@ -154,7 +153,10 @@ export default {
           type: "warning"
         });
       } else {
-        console.log(id, img);
+        console.log(id, img.substring(23));
+        let file = img.substring(23);
+        console.log(file);
+
         this.$confirm("是否永久删除该文章", "提示", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
@@ -162,9 +164,11 @@ export default {
         })
           .then(() => {
             var that = this;
+            console.log(file);
+            // that.delarticle(id);
             if (img !== null) {
               that
-                .delqiniuimg(img)
+                .delqiniuimg(file)
                 .then(res => {
                   that.delarticle(id);
                 })
