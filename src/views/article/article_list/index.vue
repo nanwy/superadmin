@@ -47,146 +47,128 @@
 </template>
 
 <script>
-import { articlelist, delarticle } from "@/api/article";
-import { delqiniuimg } from "@/api/qiniu";
+import { articlelist, delarticle } from '@/api/article'
+import { delqiniuimg } from '@/api/qiniu'
 
 export default {
   data() {
     return {
       list: null,
       listLoading: true
-    };
+    }
   },
   created() {
-    this.fetchData();
+    this.fetchData()
   },
   methods: {
     fetchData() {
-      this.listLoading = true;
+      this.listLoading = true
       articlelist()
         .then(res => {
-          console.log(res.data);
+          console.log(res.data)
 
-          this.list = res.data;
-          this.listLoading = false;
-          console.log(this.list);
+          this.list = res.data
+          this.listLoading = false
+          console.log(this.list)
         })
         .catch(err => {
-          console.log(err);
-        });
+          console.log(err)
+        })
     },
     // 格式化日期时间
     dateFormat: function(time) {
-      var date = new Date(time);
-      var year = date.getFullYear();
+      var date = new Date(time)
+      var year = date.getFullYear()
       /* 在日期格式中，月份是从0开始的，因此要加0
        * 使用三元表达式在小于10的前面加0，以达到格式统一  如 09:11:05
        * */
-      var month =
-        date.getMonth() + 1 < 10
-          ? "0" + (date.getMonth() + 1)
-          : date.getMonth() + 1;
-      var day = date.getDate() < 10 ? "0" + date.getDate() : date.getDate();
-      var hours =
-        date.getHours() < 10 ? "0" + date.getHours() : date.getHours();
-      var minutes =
-        date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes();
-      var seconds =
-        date.getSeconds() < 10 ? "0" + date.getSeconds() : date.getSeconds();
+      var month = date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
+      var day = date.getDate() < 10 ? '0' + date.getDate() : date.getDate()
+      var hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours()
+      var minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()
+      var seconds = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()
       // 拼接
-      return (
-        year +
-        "-" +
-        month +
-        "-" +
-        day +
-        " " +
-        hours +
-        ":" +
-        minutes +
-        ":" +
-        seconds
-      );
+      return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds
     },
     // 删除文章记录
     delarticle: function(id) {
-      console.log("开始删除文章记录");
+      console.log('开始删除文章记录')
       delarticle(id)
         .then(res => {
           this.$message({
             message: res.message,
-            type: "success"
-          });
-          console.log("删除文章记录完成！");
-          this.fetchData();
+            type: 'success'
+          })
+          console.log('删除文章记录完成！')
+          this.fetchData()
         })
         .catch(err => {
-          console.log("删除文章记录响应失败！");
-          console.log(err);
-          this.fetchData();
-        });
+          console.log('删除文章记录响应失败！')
+          console.log(err)
+          this.fetchData()
+        })
     },
     // 删除七牛云图片
     delqiniuimg(img) {
-      console.log("开始删除七牛云图片");
+      console.log('开始删除七牛云图片')
       return new Promise(function(resolve, reject) {
         delqiniuimg(img)
           .then(res => {
-            if (res.message === "删除成功") {
-              console.log("删除七牛云图片成功！");
-              resolve(res.data);
+            if (res.message === '删除成功') {
+              console.log('删除七牛云图片成功！')
+              resolve(res.data)
             } else {
-              console.log("删除七牛云图片失败");
-              resolve(res.data);
+              console.log('删除七牛云图片失败')
+              resolve(res.data)
             }
           })
           .catch(err => {
-            console.log("删除七牛云图片响应失败");
-            reject(err);
-          });
-      });
+            console.log('删除七牛云图片响应失败')
+            reject(err)
+          })
+      })
     },
     del: function(id, img) {
-      if (this.$store.state.user.role != "admin") {
+      if (this.$store.state.user.role != 'admin') {
         this.$message({
-          message: "您没权限删除文章哦~",
-          type: "warning"
-        });
+          message: '您没权限删除文章哦~',
+          type: 'warning'
+        })
       } else {
-        console.log(id, img.substring(23));
-        let file = img.substring(23);
-        console.log(file);
+        console.log(id, img.substring(23))
+        let file = img.substring(23)
+        console.log(file)
 
-        this.$confirm("是否永久删除该文章", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
+        this.$confirm('是否永久删除该文章', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
         })
           .then(() => {
-            var that = this;
-            console.log(file);
+            var that = this
+            console.log(file)
             // that.delarticle(id);
             if (img !== null) {
               that
                 .delqiniuimg(file)
                 .then(res => {
-                  that.delarticle(id);
+                  that.delarticle(id)
                 })
                 .catch(err => {
-                  console.log(err);
-                });
+                  console.log(err)
+                })
             } else {
-              that.delarticle(id);
+              that.delarticle(id)
             }
           })
           .catch(() => {
             this.$message({
-              type: "info",
-              message: "已取消删除"
-            });
-          });
+              type: 'info',
+              message: '已取消删除'
+            })
+          })
       }
     }
   }
-};
+}
 </script>
