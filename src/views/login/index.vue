@@ -59,7 +59,7 @@
 // import { validUsername } from '@/utils/validate'
 
 export default {
-  name: "Login",
+  name: 'Login',
   data() {
     // 自定义elementui验证规则
     // const validateUsername = (rule, value, callback) => {
@@ -79,55 +79,58 @@ export default {
     // }
     return {
       loginForm: {
-        username: "",
-        password: ""
+        username: '',
+        password: ''
       },
       // loginRules: {
       //   username: [{ required: true, trigger: 'blur', validator: validateUsername }],
       //   password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       // },
       loading: false,
-      passwordType: "password",
+      passwordType: 'password',
       redirect: undefined
-    };
+    }
   },
   watch: {
     $route: {
       handler: function(route) {
-        this.redirect = route.query && route.query.redirect;
+        // console.log(route.query, route.query.redirect)
+        this.redirect = route.query && route.query.redirect
+        // console.log('this.redirect: ', this.redirect)
       },
       immediate: true
     }
   },
   methods: {
     showPwd() {
-      if (this.passwordType === "password") {
-        this.passwordType = "";
+      if (this.passwordType === 'password') {
+        this.passwordType = ''
       } else {
-        this.passwordType = "password";
+        this.passwordType = 'password'
       }
       this.$nextTick(() => {
-        this.$refs.password.focus();
-      });
+        this.$refs.password.focus()
+      })
     },
     handleLogin() {
       // this.$refs.loginForm.validate(valid => {
       //   if (valid) {
-      this.loading = true;
+      this.loading = true
       // vuex引用了命名空间，因此调用action方式为user/login
       this.$store
-        .dispatch("user/login", this.loginForm)
+        .dispatch('user/login', this.loginForm)
         .then(() => {
-          this.$router.push({ path: this.redirect || "/" });
-          this.loading = false;
+          console.log('chenggong')
+          this.$router.push({ path: this.redirect || '/' })
+          this.loading = false
         })
         .catch(err => {
-          this.loading = false;
+          this.loading = false
           this.$message({
             message: err,
-            type: "error"
-          });
-        });
+            type: 'error'
+          })
+        })
       // }
       // else {
       //   console.log('error submit!!')
@@ -136,7 +139,7 @@ export default {
       // })
     }
   }
-};
+}
 </script>
 
 <style lang="scss">

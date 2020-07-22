@@ -62,7 +62,8 @@ export default {
         type: '',
         content: '',
         date: '',
-        img: null
+        img: null,
+        catalog: []
       },
       rules: {
         title: [{ required: true, message: '请填写标题！' }],
@@ -101,26 +102,28 @@ export default {
             // key 文件名处理，这样的话七牛会识别文件时什么类型
             // formData.append('key', this.newimg.name)
             // token
-            formData.append('key', this.newimg.name)
+            formData.append('key', $file.type + '/' + this.newimg.name)
             formData.append('token', this.token)
             // 原本没有封面图的不用删直接上传新封面图，再修改数据库
             console.log(this.newimg)
-            console.log
             console.log('原本没有封面图的不用删直接上传新封面图，再修改数据库')
             this.form.img = 'http://img.nanwayan.cn/' + this.newimg.name
 
-            axios.post(
-              'http://upload-z2.qiniup.com',
-              // this.newimg,
-              formData
-            )
-            console.log('this.form.img: ', this.form.img)
-            // var filename = file.data.file.filename
-            // this.form.img = '/api/' + filename
-            // console.log(this.form)
-            this.$nextTick(() => {
-              this.$refs.con.$refs.md.$img2Url(pos, this.form.img)
-            })
+            axios
+              .post(
+                'http://upload-z2.qiniup.com',
+                // this.newimg,
+                formData
+              )
+              .then(res => {
+                // console.log('res: ', res)
+                this.$refs.con.$refs.md.$img2Url(pos, res.data.url)
+              })
+            // console.log('this.form.img: ', this.form.img)
+            // // var filename = file.data.file.filename
+            // // this.form.img = '/api/' + filename
+            // // console.log(this.form)
+            // this.$nextTick(() => {})
             // this.editarticle(this.form)
           })
       })
@@ -147,8 +150,46 @@ export default {
       this.form.content = this.$refs['con'].content.replace(/\'/g, '"')
       // console.log(this.$refs.con.content);
       console.log(this.$store.state.user.role)
-      console.log(imgPreview)
-
+      // console.log(imgPreview)
+      var catalog = document.getElementsByClassName('v-show-content')[0].children
+      const tree = []
+      let index = 0
+      var tag_lst = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
+      for (let i = 0; i < catalog.length; i++) {
+        // console.log(tag_lst.indexOf(catelog[i].tagName))
+        if (tag_lst.indexOf(catalog[i].tagName) > 0) {
+          index++
+          tree.push({
+            id: catalog[i].firstChild.id,
+            title: catalog[i].innerText,
+            deep: parseInt(catalog[i].tagName.replace('H', '')),
+            index: index
+          })
+          // console.log(tree)
+        }
+      }
+      let _tree = []
+      var tag = 0
+      var deep = 0
+      tree.forEach(i => {
+        i.children = []
+        if (_tree.length == 0) {
+          i.tag = tag + ++deep + '.'
+          // console.log(i.tag)
+          _tree.push(i)
+          // console.log(_tree)
+        } else {
+          if (i.deep <= _tree[_tree.length - 1].deep) {
+            _tree.push(i)
+          } else {
+            _tree[_tree.length - 1].children.push(i)
+          }
+        }
+        console.log(i, _tree)
+        console.log(i.deep, _tree[_tree.length - 1].deep)
+      })
+      this.form.catalog = _tree
+      // console.log('catelog: ', catelog)
       this.$refs['form'].validate(valid => {
         if (valid) {
           console.log('表单验证通过！')

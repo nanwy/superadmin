@@ -40,7 +40,7 @@ const actions = {
 
           commit('SET_TOKEN', response.message)
           // 保存token到cookie
-          setToken(response.message)
+          // setToken(response.token)
           // 成功
           resolve()
         } else {
