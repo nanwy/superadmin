@@ -54,7 +54,7 @@ export default {
   data() {
     return {
       list: null,
-      listLoading: true
+      listLoading: true,
     }
   },
   created() {
@@ -64,19 +64,19 @@ export default {
     fetchData() {
       this.listLoading = true
       articlelist()
-        .then(res => {
+        .then((res) => {
           console.log(res.data)
 
           this.list = res.data
           this.listLoading = false
           console.log(this.list)
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err)
         })
     },
     // 格式化日期时间
-    dateFormat: function(time) {
+    dateFormat: function (time) {
       var date = new Date(time)
       var year = date.getFullYear()
       /* 在日期格式中，月份是从0开始的，因此要加0
@@ -91,18 +91,18 @@ export default {
       return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds
     },
     // 删除文章记录
-    delarticle: function(id) {
+    delarticle: function (id) {
       console.log('开始删除文章记录')
       delarticle(id)
-        .then(res => {
+        .then((res) => {
           this.$message({
             message: res.message,
-            type: 'success'
+            type: 'success',
           })
           console.log('删除文章记录完成！')
           this.fetchData()
         })
-        .catch(err => {
+        .catch((err) => {
           console.log('删除文章记录响应失败！')
           console.log(err)
           this.fetchData()
@@ -111,9 +111,9 @@ export default {
     // 删除七牛云图片
     delqiniuimg(img) {
       console.log('开始删除七牛云图片')
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         delqiniuimg(img)
-          .then(res => {
+          .then((res) => {
             if (res.message === '删除成功') {
               console.log('删除七牛云图片成功！')
               resolve(res.data)
@@ -122,27 +122,27 @@ export default {
               resolve(res.data)
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.log('删除七牛云图片响应失败')
             reject(err)
           })
       })
     },
-    del: function(id, img) {
+    del(id, img) {
       if (this.$store.state.user.role != 'admin') {
         this.$message({
           message: '您没权限删除文章哦~',
-          type: 'warning'
+          type: 'warning',
         })
       } else {
-        console.log(id, img.substring(23))
+        // console.log(id, img.substring(23))
         let file = img.substring(23)
         console.log(file)
 
         this.$confirm('是否永久删除该文章', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          type: 'warning'
+          type: 'warning',
         })
           .then(() => {
             var that = this
@@ -151,10 +151,10 @@ export default {
             if (img !== null) {
               that
                 .delqiniuimg(file)
-                .then(res => {
+                .then((res) => {
                   that.delarticle(id)
                 })
-                .catch(err => {
+                .catch((err) => {
                   console.log(err)
                 })
             } else {
@@ -164,11 +164,11 @@ export default {
           .catch(() => {
             this.$message({
               type: 'info',
-              message: '已取消删除'
+              message: '已取消删除',
             })
           })
       }
-    }
-  }
+    },
+  },
 }
 </script>

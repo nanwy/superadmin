@@ -14,7 +14,7 @@
         <!-- tinymce -->
         <!-- <tinymceeditor id="tinymce" v-model="form.content" :init="init" /> -->
         <!-- <tinymce1 ref="con" /> -->
-        <markdown ref="con" @imgAdd="imgAdd" />
+        <markdown ref="con" @imgAdd="imgAdd" @getHtmlData="getHtmlData" />
       </el-form-item>
       <el-form-item label="时间" prop="date">
         <!-- 日期时间选择器 -->
@@ -72,46 +72,47 @@ export default {
         title: '',
         type: '',
         content: '',
+        content_html: '',
         date: '',
         img: null,
-        catalog: []
+        catalog: [],
       },
       oldimg: [],
       newimg: null,
       rules: {
-        date: [{ required: true, message: '请填写日期时间' }]
+        date: [{ required: true, message: '请填写日期时间' }],
       },
       token: '',
-      jindu: 0
+      jindu: 0,
     }
   },
   mouted() {},
   created() {
     findarticle(this.$route.params.id)
-      .then(res => {
+      .then((res) => {
         console.log(res, this.$store.state.user.role)
 
-        this.form.id = res.data[0].id
-        this.form.title = res.data[0].title
-        this.form.type = res.data[0].type
-        this.$refs['con'].content = res.data[0].content
+        this.form.id = res.data.rows[0].id
+        this.form.title = res.data.rows[0].title
+        this.form.type = res.data.rows[0].type
+        this.$refs['con'].content = res.data.rows[0].content
         // this.form.content = res.list.rows[0].content
-        this.form.date = res.data[0].createtime
+        this.form.date = res.data.rows[0].createtime
         this.form.date = this.dateFormat(this.form.date)
         // this.form.img = res.list.rows[0].img;
-        if (res.data[0].img) {
+        if (res.data.rows[0].img) {
           // console.log(res.list.rows[0].img);
           console.log('121111111111111')
           this.oldimg.push({
-            name: res.data[0].img,
-            url: res.data[0].img
+            name: res.data.rows[0].img,
+            url: res.data.rows[0].img,
           })
           console.log(this.oldimg[0].url)
-          this.newimg = res.data[0].img
+          this.newimg = res.data.rows[0].img
           console.log('===========')
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err)
       })
   },
@@ -126,11 +127,11 @@ export default {
       //     'http://img.nanwayan.cn/1592539247967cc138bd2a23cbf2f1f75a333b9289381.png'
       //   )
       // )
-      imgPreview($file).then(res => {
+      imgPreview($file).then((res) => {
         // 原本有封面图的先删除旧封面图再上传新封面图，再修改数据库
         this.newimg = res
         qiniutoken()
-          .then(res => {
+          .then((res) => {
             console.log('获取七牛云上传凭证成功！')
             this.token = res
             console.log(res)
@@ -154,7 +155,7 @@ export default {
                 // this.newimg,
                 formData
               )
-              .then(res => {
+              .then((res) => {
                 // console.log('res: ', res)
                 this.$refs.con.$refs.md.$img2Url(pos, res.data.url)
               })
@@ -168,7 +169,7 @@ export default {
       })
     },
     // 格式化时间
-    dateFormat: function(time) {
+    dateFormat: function (time) {
       var date = new Date(time)
       var year = date.getFullYear()
       /* 在日期格式中，月份是从0开始的，因此要加0
@@ -181,6 +182,11 @@ export default {
       var seconds = date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()
       // 拼接
       return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds
+    },
+    getHtmlData(data, render) {
+      this.form.content_html = this.$refs['con'].content.replace(/\'/g, '"')
+      this.form.content_html = render
+      console.log('this.form.content: ', this.form.content)
     },
     // 覆盖默认的上传行为，可以自定义上传的实现
     handleUpload(res) {
@@ -197,7 +203,7 @@ export default {
     handleExceed() {
       this.$message({
         message: '只能上传一张封面图',
-        type: 'error'
+        type: 'error',
       })
     },
     // 修改文章
@@ -208,17 +214,17 @@ export default {
       console.log(res)
       console.log('修改文章完成！')
       this.$message({
-        message: res,
-        type: 'success'
+        message: res.message,
+        type: 'success',
       })
     },
     editImg() {
-      imgPreview(this.newimg).then(res => {
+      imgPreview(this.newimg).then((res) => {
         this.newimg = res
         // 原本有封面图的先删除旧封面图再上传新封面图，再修改数据库
         console.log('22222222222222')
         qiniutoken()
-          .then(res => {
+          .then((res) => {
             console.log('获取七牛云上传凭证成功！')
             this.token = res
             console.log(res)
@@ -250,7 +256,7 @@ export default {
     },
     async onSubmit() {
       // 验证表单数据
-      this.form.content = this.$refs.con.content
+      // this.form.content = this.$refs.con.content
       this.form.content = this.$refs['con'].content.replace(/\'/g, '"')
       // this.form.content = this.$refs['con'].content
       var catalog = document.getElementsByClassName('v-show-content')[0].children
@@ -266,7 +272,7 @@ export default {
             id: catalog[i].firstChild.id,
             title: catalog[i].innerText,
             deep: parseInt(catalog[i].tagName.replace('H', '')),
-            index: index
+            index: index,
           })
           // console.log(tree)
         }
@@ -274,7 +280,7 @@ export default {
       let _tree = []
       var tag = 0
       var deep = 0
-      tree.forEach(i => {
+      tree.forEach((i) => {
         i.children = []
         if (_tree.length == 0) {
           i.tag = tag + ++deep + '.'
@@ -294,13 +300,13 @@ export default {
       console.log(_tree)
       this.form.catalog = _tree
       // return
-      this.$refs['form'].validate(async valid => {
+      this.$refs['form'].validate(async (valid) => {
         if (valid) {
           console.log('表单验证通过！', this.$store.state.user.role)
           if (this.$store.state.user.role != 'admin') {
             this.$message({
               message: '您没权限修改哦~',
-              type: 'warning'
+              type: 'warning',
             })
           } else {
             if (this.oldimg.length == 0) {
@@ -344,8 +350,8 @@ export default {
           return false
         }
       })
-    }
-  }
+    },
+  },
 }
 </script>
 

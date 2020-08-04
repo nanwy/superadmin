@@ -9,7 +9,7 @@
       </el-form-item>
       <el-form-item label="内容">
         <!-- <tinymce ref="con" /> -->
-        <markdown ref="con" @imgAdd="imgAdd" />
+        <markdown ref="con" @imgAdd="imgAdd" @getHtmlData="getHtmlData" />
       </el-form-item>
       <el-form-item label="时间" prop="date">
         <!-- 日期时间选择器 -->
@@ -61,15 +61,16 @@ export default {
         title: '',
         type: '',
         content: '',
+        content_html: '',
         date: '',
         img: null,
-        catalog: []
+        catalog: [],
       },
       rules: {
         title: [{ required: true, message: '请填写标题！' }],
         type: [{ required: true, message: '请填写分类!' }],
-        date: [{ required: true, message: '请填写日期时间！' }]
-      }
+        date: [{ required: true, message: '请填写日期时间！' }],
+      },
     }
   },
   created() {
@@ -87,11 +88,11 @@ export default {
       //     'http://img.nanwayan.cn/1592539247967cc138bd2a23cbf2f1f75a333b9289381.png'
       //   )
       // )
-      imgPreview($file).then(res => {
+      imgPreview($file).then((res) => {
         // 原本有封面图的先删除旧封面图再上传新封面图，再修改数据库
         this.newimg = res
         qiniutoken()
-          .then(res => {
+          .then((res) => {
             console.log('获取七牛云上传凭证成功！')
             this.token = res
             console.log(res)
@@ -115,7 +116,7 @@ export default {
                 // this.newimg,
                 formData
               )
-              .then(res => {
+              .then((res) => {
                 // console.log('res: ', res)
                 this.$refs.con.$refs.md.$img2Url(pos, res.data.url)
               })
@@ -127,6 +128,11 @@ export default {
             // this.editarticle(this.form)
           })
       })
+    },
+    getHtmlData(data, render) {
+      this.form.content_html = this.$refs['con'].content.replace(/\'/g, '"')
+      this.form.content_html = render
+      console.log('this.form.content: ', this.form.content)
     },
     // 覆盖默认的上传行为，可以自定义上传的实现
     handleUpload(res) {
@@ -141,7 +147,7 @@ export default {
     handleExceed() {
       this.$message({
         message: '只能上传一张封面图',
-        type: 'error'
+        type: 'error',
       })
     },
 
@@ -157,27 +163,27 @@ export default {
       var tag_lst = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
       for (let i = 0; i < catalog.length; i++) {
         // console.log(tag_lst.indexOf(catelog[i].tagName))
-        if (tag_lst.indexOf(catalog[i].tagName) > 0) {
+        if (tag_lst.indexOf(catalog[i].tagName) >= 0) {
           index++
           tree.push({
             id: catalog[i].firstChild.id,
             title: catalog[i].innerText,
             deep: parseInt(catalog[i].tagName.replace('H', '')),
-            index: index
+            index: index,
           })
-          // console.log(tree)
+          console.log(tree)
         }
       }
       let _tree = []
       var tag = 0
       var deep = 0
-      tree.forEach(i => {
+      tree.forEach((i) => {
         i.children = []
         if (_tree.length == 0) {
           i.tag = tag + ++deep + '.'
           // console.log(i.tag)
           _tree.push(i)
-          // console.log(_tree)
+          console.log(_tree)
         } else {
           if (i.deep <= _tree[_tree.length - 1].deep) {
             _tree.push(i)
@@ -189,14 +195,15 @@ export default {
         console.log(i.deep, _tree[_tree.length - 1].deep)
       })
       this.form.catalog = _tree
+      console.log('this.form.catalog: ', this.form.catalog, _tree)
       // console.log('catelog: ', catelog)
-      this.$refs['form'].validate(valid => {
+      this.$refs['form'].validate((valid) => {
         if (valid) {
           console.log('表单验证通过！')
           if (this.$store.state.user.role !== 'admin') {
             this.$message({
               message: '您没权限发送哦~',
-              type: 'warning'
+              type: 'warning',
             })
           } else {
             console.log('daozhel', this.form.img)
@@ -206,21 +213,21 @@ export default {
               // this.form.filedata = "无";
               console.log(this.form)
               addarticle(this.form)
-                .then(res => {
+                .then((res) => {
                   console.log(res.errno)
                   console.log(res)
 
                   this.$message({
                     message: '发布成功啦!',
-                    type: 'success'
+                    type: 'success',
                   })
                 })
-                .catch(error => {
+                .catch((error) => {
                   console.log('发布文章错误')
                   console.log(error)
                 })
             } else {
-              imgPreview(this.form.img).then(res => {
+              imgPreview(this.form.img).then((res) => {
                 console.log('res as,nflasjflaskkjflasfj奥数班看见爱上', res)
 
                 this.form.img = res
@@ -228,7 +235,7 @@ export default {
                 // this.form.filedata = this.form.filedata;
                 // 获取七牛云上传凭证
                 qiniutoken()
-                  .then(res => {
+                  .then((res) => {
                     console.log('获取七牛云上传凭证成功！')
                     this.token = res
                   })
@@ -241,10 +248,10 @@ export default {
                     var putExtra = {
                       fname: '',
                       params: {},
-                      mimeType: ['image/png', 'image/jpeg', 'image/gif']
+                      mimeType: ['image/png', 'image/jpeg', 'image/gif'],
                     }
                     var config = {
-                      useCdnDomain: true
+                      useCdnDomain: true,
                     }
                     var ooo = this // 获取vm实例this
                     var observable = qiniu.upload(this.form.img, key, uptoken, putExtra, config)
@@ -267,13 +274,13 @@ export default {
                         //  上传错误！发表文章
                         console.log('上传错误！发表文章')
                         addarticle(ooo.form)
-                          .then(res => {
+                          .then((res) => {
                             ooo.$message({
                               message: res,
-                              type: 'success'
+                              type: 'success',
                             })
                           })
-                          .catch(error => {
+                          .catch((error) => {
                             console.log('发布文章错误')
                             console.log(error)
                           })
@@ -285,21 +292,21 @@ export default {
                         // 发表文章
                         console.log(ooo.form)
                         addarticle(ooo.form)
-                          .then(res => {
+                          .then((res) => {
                             console.log('发布文章成功！')
                             ooo.$message({
                               message: res,
-                              type: 'success'
+                              type: 'success',
                             })
                           })
-                          .catch(error => {
+                          .catch((error) => {
                             console.log('发布文章失败！')
                             console.log(error)
                           })
-                      }
+                      },
                     })
                   })
-                  .catch(err => {
+                  .catch((err) => {
                     console.log('获取七牛云上传凭证失败！')
                     console.log(err)
                   })
@@ -311,7 +318,7 @@ export default {
           return false
         }
       })
-    }
-  }
+    },
+  },
 }
 </script>

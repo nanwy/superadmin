@@ -1,25 +1,21 @@
 <template>
   <div>
-    <mavon-editor ref="md" v-model="content" @imgAdd="imgAdd"></mavon-editor>
+    <mavon-editor ref="md" v-model="content" @imgAdd="imgAdd" @change="getHtmlData" />
   </div>
 </template>
 
 <script>
 import { mavonEditor } from 'mavon-editor'
-import { addarticle } from '@/api/article'
+// import { addarticle } from '@/api/article'
 import 'mavon-editor/dist/css/index.css'
 export default {
   components: { mavonEditor },
   data() {
     return {
-      content: ''
+      content: '',
     }
   },
-  watch: {
-    content(val) {
-      console.log(val)
-    }
-  },
+
   methods: {
     imgAdd(pos, $file) {
       this.$emit('imgAdd', pos, $file)
@@ -39,8 +35,11 @@ export default {
       //   }
       // })
     },
-    imgDel(pos) {}
-  }
+    getHtmlData(val, render) {
+      this.$emit('getHtmlData', val, render)
+      // console.log('val', render)
+    },
+  },
 }
 </script>
 <style scoped>
