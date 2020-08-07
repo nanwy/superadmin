@@ -8,11 +8,13 @@
 import { mavonEditor } from 'mavon-editor'
 // import { addarticle } from '@/api/article'
 import 'mavon-editor/dist/css/index.css'
+// import '@/styles/highlightjs/styles/ocean.min.css'
 export default {
   components: { mavonEditor },
   data() {
     return {
       content: '',
+      subfield: true,
     }
   },
 
@@ -43,4 +45,7 @@ export default {
 }
 </script>
 <style scoped>
+.v-note-panel {
+  z-index: 1;
+}
 </style>

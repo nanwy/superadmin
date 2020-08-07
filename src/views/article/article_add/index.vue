@@ -35,7 +35,7 @@
         </el-upload>
         <el-progress :text-inside="true" :stroke-width="18" :percentage="jindu" />
       </el-form-item>
-      <el-button type="success" @click="onSubmit()">发表文章</el-button>
+      <el-button type="success" class="submit" @click="onSubmit()">发表文章</el-button>
     </el-form>
   </div>
 </template>
@@ -150,8 +150,42 @@ export default {
         type: 'error',
       })
     },
+    treeify(tree) {
+      let _tree = []
+      var tag = 0
+      var deep = 0
+      tree.forEach((i) => {
+        i.children = []
+        if (_tree.length == 0) {
+          i.tag = tag + ++deep + '.'
+          // console.log(i.tag)
+          _tree.push(i)
+          console.log(_tree)
+        } else {
+          if (i.deep <= _tree[_tree.length - 1].deep) {
+            i.tag = tag + ++deep + '.'
+            _tree.push(i)
+          } else {
+            _tree[_tree.length - 1].children.push(i)
+          }
+        }
+        _tree.forEach((i) => {
+          let ids = []
+          var deep = 0
+          i.children.forEach((node) => {
+            node.tag = tag + ++deep + '.'
+          })
+          if (ids.length > 1) {
+            i.children = treeify(i.children)
+          }
+        })
 
-    onSubmit() {
+        // console.log(i, _tree)
+        // console.log(i.deep, _tree[_tree.length - 1].deep)
+      })
+      return _tree
+    },
+    async onSubmit() {
       // 验证表单数据
       this.form.content = this.$refs['con'].content.replace(/\'/g, '"')
       // console.log(this.$refs.con.content);
@@ -174,28 +208,9 @@ export default {
           console.log(tree)
         }
       }
-      let _tree = []
-      var tag = 0
-      var deep = 0
-      tree.forEach((i) => {
-        i.children = []
-        if (_tree.length == 0) {
-          i.tag = tag + ++deep + '.'
-          // console.log(i.tag)
-          _tree.push(i)
-          console.log(_tree)
-        } else {
-          if (i.deep <= _tree[_tree.length - 1].deep) {
-            _tree.push(i)
-          } else {
-            _tree[_tree.length - 1].children.push(i)
-          }
-        }
-        console.log(i, _tree)
-        console.log(i.deep, _tree[_tree.length - 1].deep)
-      })
-      this.form.catalog = _tree
-      console.log('this.form.catalog: ', this.form.catalog, _tree)
+
+      this.form.catalog = await this.treeify(tree)
+      // console.log('this.form.catalog: ', this.form.catalog, _tree)
       // console.log('catelog: ', catelog)
       this.$refs['form'].validate((valid) => {
         if (valid) {
@@ -322,3 +337,14 @@ export default {
   },
 }
 </script>
+<style>
+.submit {
+  position: fixed;
+  right: 0;
+  top: 60%;
+  z-index: 999;
+}
+.app-container /deep/ .v-note-wrapper {
+  z-index: 1;
+}
+</style>

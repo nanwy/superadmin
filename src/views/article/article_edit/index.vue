@@ -44,7 +44,7 @@
         <!-- {{this.oldimg[0].url}} -->
         <el-progress :text-inside="true" :stroke-width="18" :percentage="jindu" />
       </el-form-item>
-      <el-form-item>
+      <el-form-item class="submit">
         <el-button type="success" @click="onSubmit()">点击修改</el-button>
       </el-form-item>
     </el-form>
@@ -117,6 +117,45 @@ export default {
       })
   },
   methods: {
+    treeify(tree) {
+      let _tree = []
+      var tag = 0
+      var deep = 0
+      tree.forEach((i) => {
+        i.children = []
+        if (_tree.length == 0) {
+          i.tag = tag + ++deep + '.'
+          // console.log(i.tag)
+          _tree.push(i)
+          console.log(_tree)
+        } else {
+          if (i.deep <= _tree[_tree.length - 1].deep) {
+            i.tag = tag + ++deep + '.'
+            _tree.push(i)
+          } else {
+            _tree[_tree.length - 1].children.push(i)
+          }
+        }
+
+        // console.log(i, _tree)
+        // console.log(i.deep, _tree[_tree.length - 1].deep)
+      })
+      _tree.forEach((i) => {
+        let ids = []
+        deep = 0
+        i.children.forEach((node) => {
+          node.tag = tag + ++deep + '.'
+          if (ids.indexOf(node.deep) === -1) {
+            ids.push(node.deep)
+          }
+        })
+        if (ids.length > 1) {
+          i.children = this.treeify(i.children)
+        }
+      })
+      console.log(tree)
+      return _tree
+    },
     imgAdd(pos, $file) {
       const formData = new FormData()
 
@@ -186,7 +225,7 @@ export default {
     getHtmlData(data, render) {
       this.form.content_html = this.$refs['con'].content.replace(/\'/g, '"')
       this.form.content_html = render
-      console.log('this.form.content: ', this.form.content)
+      // console.log('this.form.content: ', this.form.content)
     },
     // 覆盖默认的上传行为，可以自定义上传的实现
     handleUpload(res) {
@@ -277,28 +316,7 @@ export default {
           // console.log(tree)
         }
       }
-      let _tree = []
-      var tag = 0
-      var deep = 0
-      tree.forEach((i) => {
-        i.children = []
-        if (_tree.length == 0) {
-          i.tag = tag + ++deep + '.'
-          // console.log(i.tag)
-          _tree.push(i)
-          // console.log(_tree)
-        } else {
-          if (i.deep <= _tree[_tree.length - 1].deep) {
-            _tree.push(i)
-          } else {
-            _tree[_tree.length - 1].children.push(i)
-          }
-        }
-        // console.log(i, _tree)
-        // console.log(i.deep, _tree[_tree.length - 1].deep)
-      })
-      console.log(_tree)
-      this.form.catalog = _tree
+      this.form.catalog = await this.treeify(tree)
       // return
       this.$refs['form'].validate(async (valid) => {
         if (valid) {
@@ -354,4 +372,15 @@ export default {
   },
 }
 </script>
+<style scoped>
+.submit {
+  position: fixed;
+  right: 0;
+  top: 60%;
+  z-index: 999;
+}
+.app-container /deep/ .v-note-wrapper {
+  z-index: 1;
+}
+</style>
 
