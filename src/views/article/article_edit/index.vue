@@ -1,14 +1,22 @@
 <template>
   <div class="app-container">
-    <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+    <el-form ref="data" :model="data" :rules="rules" label-width="80px">
       <el-form-item label="id" hidden>
-        <el-input v-model="form.id" />
+        <el-input v-model="data.id" />
       </el-form-item>
       <el-form-item label="标题">
-        <el-input v-model="form.title" />
+        <el-input v-model="data.title" />
       </el-form-item>
-      <el-form-item label="分类">
-        <el-input v-model="form.type" />
+      <el-form-item label="标签">
+        <!-- <el-input v-model="form.type" /> -->
+        <el-select v-model="tags" multiple placeholder="请选择">
+          <el-option
+            v-for="item in list"
+            :key="item.id"
+            :value="item.title"
+            @click.native="selectId(item.id)"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="内容">
         <!-- tinymce -->
@@ -19,7 +27,7 @@
       <el-form-item label="时间" prop="date">
         <!-- 日期时间选择器 -->
         <el-date-picker
-          v-model="form.date"
+          v-model="data.date"
           type="datetime"
           value-format="yyyy-MM-dd HH:mm:ss"
           placeholder="选择日期时间"
@@ -62,12 +70,12 @@ import { qiniutoken, delqiniuimg } from '@/api/qiniu'
 import { imgPreview, compress, dataURLtoFile } from '@/utils/zip'
 // 引入七牛云
 import * as qiniu from 'qiniu-js'
-
+import { tagList } from '@/api/tag'
 export default {
   components: { tinymce1, markdown },
   data() {
     return {
-      form: {
+      data: {
         id: '',
         title: '',
         type: '',
@@ -76,7 +84,10 @@ export default {
         date: '',
         img: null,
         catalog: [],
+        tags: [],
       },
+      list: [],
+      tags: '',
       oldimg: [],
       newimg: null,
       rules: {
@@ -88,27 +99,40 @@ export default {
   },
   mouted() {},
   created() {
+    tagList().then((res) => {
+      this.list = res.data.rows
+      // res.data.rows.forEach((item) => {
+      //   console.log(item.title)
+      //   this.tags.push(item.title)
+      // })
+
+      console.log('this.list : ', this.list)
+    })
     findarticle(this.$route.params.id)
       .then((res) => {
         console.log(res, this.$store.state.user.role)
-
-        this.form.id = res.data.rows[0].id
-        this.form.title = res.data.rows[0].title
-        this.form.type = res.data.rows[0].type
-        this.$refs['con'].content = res.data.rows[0].content
-        // this.form.content = res.list.rows[0].content
-        this.form.date = res.data.rows[0].createtime
-        this.form.date = this.dateFormat(this.form.date)
-        // this.form.img = res.list.rows[0].img;
-        if (res.data.rows[0].img) {
-          // console.log(res.list.rows[0].img);
+        res.data[0].tags.forEach((i) => {
+          this.tags.push(i.title)
+        })
+        // this.tags = res.data[0].tags.title
+        console.log('this.tags: ', this.tags)
+        this.data.id = res.data[0].id
+        this.data.title = res.data[0].title
+        this.data.type = res.data[0].type
+        this.$refs['con'].content = res.data[0].content
+        // this.data.content = res.list[0].content
+        this.data.date = res.data[0].createtime
+        this.data.date = this.dateFormat(this.data.date)
+        // this.data.img = res.list[0].img;
+        if (res.data[0].img) {
+          // console.log(res.list[0].img);
           console.log('121111111111111')
           this.oldimg.push({
-            name: res.data.rows[0].img,
-            url: res.data.rows[0].img,
+            name: res.data[0].img,
+            url: res.data[0].img,
           })
           console.log(this.oldimg[0].url)
-          this.newimg = res.data.rows[0].img
+          this.newimg = res.data[0].img
           console.log('===========')
         }
       })
@@ -117,6 +141,10 @@ export default {
       })
   },
   methods: {
+    selectId(res) {
+      console.log('点击', res)
+      this.data.tags.push(res)
+    },
     treeify(tree) {
       let _tree = []
       var tag = 0
@@ -159,7 +187,7 @@ export default {
     imgAdd(pos, $file) {
       const formData = new FormData()
 
-      console.log('pos', pos, $file, this.form.content)
+      console.log('pos', pos, $file, this.data.content)
       // console.log(
       //   this.$refs.con.$refs.md.$img2Url(
       //     pos,
@@ -186,7 +214,7 @@ export default {
             // 原本没有封面图的不用删直接上传新封面图，再修改数据库
             console.log(this.newimg)
             console.log('原本没有封面图的不用删直接上传新封面图，再修改数据库')
-            this.form.img = 'http://img.nanwayan.cn/' + this.newimg.name
+            this.data.img = 'http://img.nanwayan.cn/' + this.newimg.name
 
             axios
               .post(
@@ -223,8 +251,8 @@ export default {
       return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds
     },
     getHtmlData(data, render) {
-      this.form.content_html = this.$refs['con'].content.replace(/\'/g, '"')
-      this.form.content_html = render
+      this.data.content_html = this.$refs['con'].content.replace(/\'/g, '"')
+      this.data.content_html = render
       // console.log('this.form.content: ', this.form.content)
     },
     // 覆盖默认的上传行为，可以自定义上传的实现
@@ -248,7 +276,7 @@ export default {
     // 修改文章
     async editarticle(data) {
       console.log('开始修改文章')
-      console.log(this.$refs.form.model)
+      console.log(this.$refs.data.model)
       var res = await editarticle(data)
       console.log(res)
       console.log('修改文章完成！')
@@ -279,7 +307,7 @@ export default {
             console.log(this.newimg)
             console.log
             console.log('原本没有封面图的不用删直接上传新封面图，再修改数据库')
-            this.form.img = 'http://img.nanwayan.cn/' + this.newimg.name
+            this.data.img = 'http://img.nanwayan.cn/' + this.newimg.name
             axios.post(
               'http://upload-z2.qiniup.com',
               // this.newimg,
@@ -289,14 +317,14 @@ export default {
             // this.form.img = '/api/' + filename
             // console.log(this.form)
 
-            this.editarticle(this.form)
+            this.editarticle(this.data)
           })
       })
     },
     async onSubmit() {
       // 验证表单数据
       // this.form.content = this.$refs.con.content
-      this.form.content = this.$refs['con'].content.replace(/\'/g, '"')
+      this.data.content = this.$refs['con'].content.replace(/\'/g, '"')
       // this.form.content = this.$refs['con'].content
       var catalog = document.getElementsByClassName('v-show-content')[0].children
       const tree = []
@@ -316,9 +344,9 @@ export default {
           // console.log(tree)
         }
       }
-      this.form.catalog = await this.treeify(tree)
+      this.data.catalog = await this.treeify(tree)
       // return
-      this.$refs['form'].validate(async (valid) => {
+      this.$refs['data'].validate(async (valid) => {
         if (valid) {
           console.log('表单验证通过！', this.$store.state.user.role)
           if (this.$store.state.user.role != 'admin') {
@@ -336,8 +364,8 @@ export default {
                 console.log('有风吗')
 
                 console.log('111111111')
-                this.form.img = null
-                this.editarticle(this.form)
+                this.data.img = null
+                this.editarticle(this.data)
               }
             } else {
               console.log('sssssssssssssss')
@@ -347,8 +375,8 @@ export default {
               if (this.newimg == null) {
                 // 如果只删除七牛云图片，除了修改数据库还要把七牛云图片删了
                 console.log('如果只删除七牛云图片，除了修改数据库还要把七牛云图片删了')
-                this.form.img = null
-                this.editarticle(this.form)
+                this.data.img = null
+                this.editarticle(this.data)
                 return
               }
               if (this.oldimg[0].name != this.newimg) {
@@ -358,8 +386,8 @@ export default {
               } else {
                 console.log('sdfsdgd')
                 console.log(this.oldimg[0].name)
-                this.form.img = this.oldimg[0].name
-                this.editarticle(this.form)
+                this.data.img = this.oldimg[0].name
+                this.editarticle(this.data)
               }
             }
           }

@@ -39,8 +39,8 @@ module.exports = {
     },
     proxy: {
       '/api': {
-        target: 'http://59.110.124.156:8000',
-        // target: 'http://localhost:8000',
+        // target: 'http://59.110.124.156:8000',
+        target: 'http://localhost:8000',
         ws: true,
         changeOrigin: true,
         pathRewrite: {

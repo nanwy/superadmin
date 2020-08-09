@@ -5,6 +5,7 @@ Vue.use(Router)
 
 /* Layout */
 import Layout from '@/layout'
+import { Tag } from 'element-ui'
 
 /**
  * Note: sub-menu only appear when route children.length >= 1
@@ -113,7 +114,22 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/tags',
+    component: Layout,
+    redirect: '/tags/tags_list',
+    name: 'Tag',
+    meta: { title: '管理标签', icon: 'example' },
+    children: [
+      {
+        path: 'tags_list',
+        name: 'tags_list',
+        component: () => import('@/views/tags/index'),
+        meta: { title: '标签列表', icon: 'table' }
+      }
 
+    ]
+  },
   {
     path: '/user',
     component: Layout,

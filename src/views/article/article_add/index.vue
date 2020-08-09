@@ -1,11 +1,19 @@
 <template>
   <div class="app-container">
-    <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+    <el-form ref="data" :model="data" :rules="rules" label-width="80px">
       <el-form-item label="标题" prop="title">
-        <el-input v-model="form.title" />
+        <el-input v-model="data.title" />
       </el-form-item>
-      <el-form-item label="分类" prop="type">
-        <el-input v-model="form.type" />
+      <el-form-item label="标签">
+        <!-- <el-input v-model="form.type" /> -->
+        <el-select v-model="tags" multiple placeholder="请选择">
+          <el-option
+            v-for="item in list"
+            :key="item.id"
+            :value="item.title"
+            @click.native="selectId(item.id)"
+          ></el-option>
+        </el-select>
       </el-form-item>
       <el-form-item label="内容">
         <!-- <tinymce ref="con" /> -->
@@ -14,7 +22,7 @@
       <el-form-item label="时间" prop="date">
         <!-- 日期时间选择器 -->
         <el-date-picker
-          v-model="form.date"
+          v-model="data.date"
           type="datetime"
           value-format="yyyy-MM-dd HH:mm:ss"
           placeholder="选择日期时间"
@@ -44,6 +52,7 @@
 // 引入api
 import { addarticle } from '@/api/article'
 import { qiniutoken } from '@/api/qiniu'
+import { tagList } from '@/api/tag'
 import { imgPreview, compress, dataURLtoFile } from '@/utils/zip'
 // 引入七牛云
 import axios from 'axios'
@@ -57,7 +66,7 @@ export default {
     return {
       token: '',
       jindu: 0,
-      form: {
+      data: {
         title: '',
         type: '',
         content: '',
@@ -65,7 +74,10 @@ export default {
         date: '',
         img: null,
         catalog: [],
+        tags: [],
       },
+      list: [],
+      tags: '',
       rules: {
         title: [{ required: true, message: '请填写标题！' }],
         type: [{ required: true, message: '请填写分类!' }],
@@ -75,13 +87,30 @@ export default {
   },
   created() {
     console.log(dataURLtoFile, imgPreview, '发布')
+    tagList().then((res) => {
+      this.list = res.data.rows
+      console.log('this.list : ', this.list)
+    })
   },
   mouted() {},
   methods: {
+    showMessage(e) {
+      console.log(e)
+      let obj = this.list.find((item) => {
+        return (item.title = e) //筛选出对应数据
+      })
+      console.log(obj)
+      this.data.tags.push(obj.id)
+      console.log('this.data.tags: ', this.data.tags)
+    },
+    selectId(res) {
+      console.log('点击', res)
+      this.data.tags.push(res)
+    },
     imgAdd(pos, $file) {
       const formData = new FormData()
 
-      console.log('pos', pos, $file, this.form.content)
+      console.log('pos', pos, $file, this.data.content)
       // console.log(
       //   this.$refs.con.$refs.md.$img2Url(
       //     pos,
@@ -108,7 +137,7 @@ export default {
             // 原本没有封面图的不用删直接上传新封面图，再修改数据库
             console.log(this.newimg)
             console.log('原本没有封面图的不用删直接上传新封面图，再修改数据库')
-            this.form.img = 'http://img.nanwayan.cn/' + this.newimg.name
+            this.data.img = 'http://img.nanwayan.cn/' + this.newimg.name
 
             axios
               .post(
@@ -130,18 +159,18 @@ export default {
       })
     },
     getHtmlData(data, render) {
-      this.form.content_html = this.$refs['con'].content.replace(/\'/g, '"')
-      this.form.content_html = render
-      console.log('this.form.content: ', this.form.content)
+      this.data.content_html = this.$refs['con'].content.replace(/\'/g, '"')
+      this.data.content_html = render
+      console.log('this.data.content: ', this.data.content)
     },
     // 覆盖默认的上传行为，可以自定义上传的实现
     handleUpload(res) {
-      this.form.img = res.file
+      this.data.img = res.file
       console.log(res.file)
     },
     // 文件列表移除文件时的钩子
     handleRemove() {
-      this.form.img = null
+      this.data.img = null
     },
     // 文件超出个数限制时的钩子
     handleExceed() {
@@ -187,7 +216,7 @@ export default {
     },
     async onSubmit() {
       // 验证表单数据
-      this.form.content = this.$refs['con'].content.replace(/\'/g, '"')
+      this.data.content = this.$refs['con'].content.replace(/\'/g, '"')
       // console.log(this.$refs.con.content);
       console.log(this.$store.state.user.role)
       // console.log(imgPreview)
@@ -209,10 +238,10 @@ export default {
         }
       }
 
-      this.form.catalog = await this.treeify(tree)
+      this.data.catalog = await this.treeify(tree)
       // console.log('this.form.catalog: ', this.form.catalog, _tree)
       // console.log('catelog: ', catelog)
-      this.$refs['form'].validate((valid) => {
+      this.$refs['data'].validate((valid) => {
         if (valid) {
           console.log('表单验证通过！')
           if (this.$store.state.user.role !== 'admin') {
@@ -221,13 +250,13 @@ export default {
               type: 'warning',
             })
           } else {
-            console.log('daozhel', this.form.img)
+            console.log('daozhel', this.data.img)
 
-            if (this.form.img == null) {
+            if (this.data.img == null) {
               console.log('没有封面图')
               // this.form.filedata = "无";
-              console.log(this.form)
-              addarticle(this.form)
+              console.log(this.data)
+              addarticle(this.data)
                 .then((res) => {
                   console.log(res.errno)
                   console.log(res)
@@ -242,10 +271,10 @@ export default {
                   console.log(error)
                 })
             } else {
-              imgPreview(this.form.img).then((res) => {
+              imgPreview(this.data.img).then((res) => {
                 console.log('res as,nflasjflaskkjflasfj奥数班看见爱上', res)
 
-                this.form.img = res
+                this.data.img = res
                 console.log('有封面图')
                 // this.form.filedata = this.form.filedata;
                 // 获取七牛云上传凭证
@@ -256,8 +285,8 @@ export default {
                   })
                   .then(() => {
                     var datetime = new Date()
-                    var key = datetime.getTime() + this.form.img.name
-                    console.log(this.form)
+                    var key = datetime.getTime() + this.data.img.name
+                    console.log(this.data)
 
                     var uptoken = this.token
                     var putExtra = {
@@ -269,7 +298,7 @@ export default {
                       useCdnDomain: true,
                     }
                     var ooo = this // 获取vm实例this
-                    var observable = qiniu.upload(this.form.img, key, uptoken, putExtra, config)
+                    var observable = qiniu.upload(this.data.img, key, uptoken, putExtra, config)
                     console.log(observable)
 
                     var subscription = observable.subscribe({
@@ -288,10 +317,10 @@ export default {
                         console.log(err)
                         //  上传错误！发表文章
                         console.log('上传错误！发表文章')
-                        addarticle(ooo.form)
+                        addarticle(ooo.data)
                           .then((res) => {
                             ooo.$message({
-                              message: res,
+                              message: '发布成功',
                               type: 'success',
                             })
                           })
@@ -303,10 +332,10 @@ export default {
                       complete(ress) {
                         // 接收上传完成后的后端返回信息
                         console.log('上传封面图成功！')
-                        ooo.form.img = 'http://img.nanwayan.cn/' + ress.key
+                        ooo.data.img = 'http://img.nanwayan.cn/' + ress.key
                         // 发表文章
-                        console.log(ooo.form)
-                        addarticle(ooo.form)
+                        console.log(ooo.data)
+                        addarticle(ooo.data)
                           .then((res) => {
                             console.log('发布文章成功！')
                             ooo.$message({
