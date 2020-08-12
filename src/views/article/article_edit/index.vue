@@ -113,6 +113,7 @@ export default {
         console.log(res, this.$store.state.user.role)
         res.data[0].tags.forEach((i) => {
           this.tags.push(i.title)
+          this.data.tags.push(i.id)
         })
         // this.tags = res.data[0].tags.title
         console.log('this.tags: ', this.tags)
@@ -122,6 +123,8 @@ export default {
         this.$refs['con'].content = res.data[0].content
         // this.data.content = res.list[0].content
         this.data.date = res.data[0].createtime
+
+        console.log('this.data.tags: ', this.data.tags)
         this.data.date = this.dateFormat(this.data.date)
         // this.data.img = res.list[0].img;
         if (res.data[0].img) {
@@ -328,7 +331,7 @@ export default {
       // this.form.content = this.$refs['con'].content
       var catalog = document.getElementsByClassName('v-show-content')[0].children
       const tree = []
-      let index = 0
+      let index = -1
       var tag_lst = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
       for (let i = 0; i < catalog.length; i++) {
         console.log(catalog[i].tagName, tag_lst.indexOf(catalog[i].tagName > 0))
@@ -344,6 +347,7 @@ export default {
           // console.log(tree)
         }
       }
+      console.log('data', this.data)
       this.data.catalog = await this.treeify(tree)
       // return
       this.$refs['data'].validate(async (valid) => {

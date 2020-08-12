@@ -222,7 +222,7 @@ export default {
       // console.log(imgPreview)
       var catalog = document.getElementsByClassName('v-show-content')[0].children
       const tree = []
-      let index = 0
+      let index = -1
       var tag_lst = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6']
       for (let i = 0; i < catalog.length; i++) {
         // console.log(tag_lst.indexOf(catelog[i].tagName))
