@@ -48,11 +48,11 @@ module.exports = {
         }
       }
       // '/api': {
-      //   target: `http://localhost:3000`,
-      //   // target: `http://47.100.90.12:3000`,
+      //   target: 'http://localhost:8000',
       //   changeOrigin: true,
+      //   // ws: true,//websocket支持
       //   pathRewrite: {
-      //     '^/api': ''
+      //     '^/api': '/api'
       //   }
       // }
     }

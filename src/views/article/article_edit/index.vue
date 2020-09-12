@@ -9,12 +9,12 @@
       </el-form-item>
       <el-form-item label="标签">
         <!-- <el-input v-model="form.type" /> -->
-        <el-select v-model="tags" multiple placeholder="请选择">
+        <el-select v-model="tags" multiple placeholder="请选择" @remove-tag="remove">
           <el-option
             v-for="item in list"
             :key="item.id"
             :value="item.title"
-            @click.native="selectId(item.id)"
+            @click.native="selectId(item)"
           ></el-option>
         </el-select>
       </el-form-item>
@@ -113,7 +113,7 @@ export default {
         console.log(res, this.$store.state.user.role)
         res.data[0].tags.forEach((i) => {
           this.tags.push(i.title)
-          this.data.tags.push(i.id)
+          this.data.tags.push(i)
         })
         // this.tags = res.data[0].tags.title
         console.log('this.tags: ', this.tags)
@@ -144,9 +144,19 @@ export default {
       })
   },
   methods: {
+    remove(res) {
+      let arr = []
+      for (const key of this.data.tags) {
+        arr.push(key.title)
+        console.log(key)
+        var index = arr.indexOf(res)
+        console.log(res, index, this.data.tags)
+      }
+
+      this.data.tags.splice(index, 1)
+    },
     selectId(res) {
-      console.log('点击', res)
-      this.data.tags.push(res)
+      this.data.tags.indexOf(res) === -1 && this.data.tags.push(res)
     },
     treeify(tree) {
       let _tree = []
@@ -327,6 +337,7 @@ export default {
     async onSubmit() {
       // 验证表单数据
       // this.form.content = this.$refs.con.content
+      console.log(this.data)
       this.data.content = this.$refs['con'].content.replace(/\'/g, '"')
       // this.form.content = this.$refs['con'].content
       var catalog = document.getElementsByClassName('v-show-content')[0].children
