@@ -10,13 +10,23 @@ export function articlelist(ordername, orderby) {
     }
   })
 }
+export function articlePage(pageNum, pageSize) {
+  return request({
+    url: '/api/blog/page',
+    method: 'get',
+    params: {
+      pageNum,
+      pageSize
+    }
+  })
+}
 export function articletypelist() {
   return request({
     url: '/api/article/typelist',
     method: 'get',
   })
 }
-export function articlepage(ordername, orderby, type, nowpage, pagesize) {
+export function articlepage1(ordername, orderby, type, nowpage, pagesize) {
   return request({
     url: '/api/article/page',
     method: 'get',

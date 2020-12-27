@@ -1,28 +1,21 @@
 <template>
   <div class="app-container">
-    <el-table
-      v-loading="listLoading"
-      :data="list"
-      element-loading-text="Loading"
-      border
-      fit
-      highlight-current-row
-    >
+    <el-table v-loading="listLoading" :data="list" element-loading-text="Loading" border fit highlight-current-row>
       <el-table-column align="center" label="编号" width="95">
         <template slot-scope="scoped">{{ scoped.row.id }}</template>
         <!-- <template slot-scope="scope">{{ scope.row.id }}</template> -->
       </el-table-column>
       <el-table-column label="标题" align="center">
-        <template slot-scope="{row}">
-          <router-link :to="'/article/article_edit/'+row.id">{{ row.title }}</router-link>
+        <template slot-scope="{ row }">
+          <router-link :to="'/article/article_edit/' + row.id">{{ row.title }}</router-link>
         </template>
       </el-table-column>
       <el-table-column label="分类" align="center">
-        <template slot-scope="{row}">{{ row.type }}</template>
+        <template slot-scope="{ row }">{{ row.type }}</template>
       </el-table-column>
       <el-table-column label="内容" align="center">
         <template slot-scope="scope">
-          <span style="white-space:nowrap">{{ scope.row.content }}</span>
+          <span style="white-space: nowrap">{{ scope.row.content }}</span>
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="封面图" align="center">
@@ -39,15 +32,27 @@
       </el-table-column>
       <el-table-column align="center" label="操作" width="200">
         <template slot-scope="scope">
-          <el-button type="danger" @click="del(scope.row.id,scope.row.img)">删除</el-button>
+          <el-button type="danger" @click="del(scope.row.id, scope.row.img)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      background
+      layout=" sizes, prev, pager, next"
+      :total="total"
+      :page-size="5"
+      :pager-count="5"
+      :current-page="pageNum"
+      :page-sizes="[3, 5, 7]"
+      @current-change="currentchange"
+      style="text-align: center"
+      class="wow fadeInUp"
+    ></el-pagination>
   </div>
 </template>
 
 <script>
-import { articlelist, delarticle } from '@/api/article'
+import { articlelist, delarticle, articlePage } from '@/api/article'
 import { delqiniuimg } from '@/api/qiniu'
 
 export default {
@@ -55,25 +60,58 @@ export default {
     return {
       list: null,
       listLoading: true,
+      pageNum: 1,
+      total: 0,
     }
   },
   created() {
     this.fetchData()
   },
   methods: {
-    fetchData() {
-      this.listLoading = true
-      articlelist()
-        .then((res) => {
-          console.log(res.data)
+    // fetchData() {
+    //   this.listLoading = true
+    //   articlelist()
+    //     .then((res) => {
+    //       console.log(res.data)
 
-          this.list = res.data
-          this.listLoading = false
-          console.log(this.list)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
+    //       this.list = res.data
+    //       this.listLoading = false
+    //       console.log(this.list)
+    //     })
+    //     .catch((err) => {
+    //       console.log(err)
+    //     })
+    // },
+    async fetchData() {
+      var { data } = await articlePage(this.pageNum, 10)
+      console.log('data: ', data)
+      this.list = data.rows
+      this.total = data.count
+      this.listLoading = false
+    },
+    async currentchange(pageNum) {
+      // console.log(pageNum,pageSize);
+
+      // console.log(this.$refs.con[0])
+      // this.anim = true
+      // // console.log(this.anim)
+
+      // if (
+      //   pageNum >= Math.abs(this.$store.state.article.count / this.$store.state.article.pageSize / 2) &&
+      //   pageNum < this.$store.state.article.count / this.$store.state.article.pageSize
+      // ) {
+      //   this.center = true
+      //   // console.log('dian吉',this.$store.state.article.count);
+      // } else {
+      //   this.center = false
+      // }
+      // console.log('dian吉',this.$store.state.article.count / this.$store.state.article.pageSize / 2);
+      // this.$store.commit("article/nowpage", pageNum);
+      var { data } = await articlePage(pageNum, 10)
+      // console.log('data: ', data)
+      this.list = data.rows
+      // scrollTo({ top: 0, behavior: 'instant' })
+      // this.$refs.con[pageNum].removeClass('animated')
     },
     // 格式化日期时间
     dateFormat: function (time) {

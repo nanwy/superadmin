@@ -241,7 +241,8 @@ export default {
       this.data.catalog = await this.treeify(tree)
       // console.log('this.form.catalog: ', this.form.catalog, _tree)
       // console.log('catelog: ', catelog)
-      this.$refs['data'].validate((valid) => {
+      this.$refs['data'].validate((valid, e) => {
+        console.log('表单是', valid, this.$refs['data'].validate, e)
         if (valid) {
           console.log('表单验证通过！')
           if (this.$store.state.user.role !== 'admin') {
